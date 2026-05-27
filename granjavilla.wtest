@@ -1,0 +1,123 @@
+import wollok.game.*
+import personaje.*
+import cultivos.*
+import almacen.*
+import mercado.*
+
+
+describe "test de granjavilla" {
+
+    method initialize(){
+        personaje.position(game.center())
+        personaje.oro(0)
+    }
+
+
+    //SEMBRAR
+    test "siembra los cultivos en una parcela libre y en una ocupada" {
+        personaje.sembrar(tomaco)
+        assert.equals(game.uniqueCollider(personaje).image(), "tomaco_baby.png")
+
+        personaje.moverAr(1)
+        personaje.sembrar(maiz)
+        assert.equals(game.uniqueCollider(personaje).image(), "corn_baby.png")
+
+        personaje.moverAr(1)
+        personaje.sembrar(trigo)
+        assert.equals(game.uniqueCollider(personaje).image(), "wheat_0.png")
+
+        assert.throwsException({ personaje.sembrar(tomaco) })
+    }
+
+
+    //REGAR
+    test "regar maiz" {
+        personaje.sembrar(maiz)
+        assert.equals(game.uniqueCollider(personaje).image(), "corn_baby.png")
+
+        personaje.regar()
+        assert.equals(game.uniqueCollider(personaje).image(), "corn_adult.png")
+
+        personaje.regar()
+        assert.equals(game.uniqueCollider(personaje).image(), "corn_adult.png")
+    }
+
+    test "regar tomaco con exito en el centro y en el borde" {
+        personaje.sembrar(tomaco)
+        personaje.regar()
+
+        assert.that(personaje.esParcelaLibre())
+
+        personaje.moverAr(5)
+        personaje.sembrar(tomaco)
+        personaje.regar()
+        personaje.moverAb(10)
+
+        assert.equals(game.uniqueCollider(personaje).image(), "tomaco_baby.png")
+    }
+
+    test "regar tomaco invalido" {
+        personaje.sembrar(trigo)
+        personaje.moverAb(1)
+        personaje.sembrar(tomaco)
+
+        assert.throwsException({ personaje.regar() })
+    }
+
+    test "regar trigo" {
+        personaje.sembrar(trigo)
+        personaje.regar()
+        assert.equals(1, game.uniqueCollider(personaje).crecimientoActual())
+
+        personaje.regar()
+        personaje.regar()
+        assert.equals(3, game.uniqueCollider(personaje).crecimientoActual())
+
+        personaje.regar()
+        assert.equals(0, game.uniqueCollider(personaje).crecimientoActual())
+    }
+
+
+    //COSECHA
+    test "cosechar cultivos" {
+        personaje.sembrar(tomaco)
+        personaje.cosechar()
+
+        personaje.sembrar(trigo)
+        assert.throwsException({ personaje.cosechar() })
+        personaje.regar()
+        personaje.regar()
+        personaje.cosechar()
+
+        personaje.sembrar(maiz)
+        assert.throwsException({ personaje.cosechar() })
+        personaje.regar()
+        personaje.cosechar()
+
+        assert.equals(3, almacen.tamañoCosecha())
+    }
+
+
+    //VENTA :c no pasa, creo que es por el posicionamiento del personaje y los mercados
+    test "vender al mercado con oro suficiente y al mercado con oro insuficiente" {
+        mercado.agregarMercadoEn_Con_Oro(game.origin(), 500)
+        mercado.agregarMercadoEn_Con_Oro(game.at(10, 10), 0)
+
+        personaje.sembrar(tomaco)
+        personaje.cosechar()
+        personaje.sembrar(trigo)
+        personaje.regar()
+        personaje.regar()
+        personaje.cosechar()
+
+        //mercado sin oro
+        personaje.moverDer(5)
+        personaje.moverAr(5)
+        assert.throwsException({ personaje.vender() })
+
+        //mercado con oro
+        personaje.moverIzq(10)
+        personaje.vender()
+        assert.equals(180, personaje.oro())
+    }
+}
