@@ -1,18 +1,41 @@
 import wollok.game.*
 import personaje.*
 import cultivos.*
+import mercado.*
 
-program farmville {
-	//  CONFIG	
+
+program granjavilla {
+	//CONFIG	
 	game.title("La granja")
 	game.height(10)
 	game.width(10)
 	game.ground("ground.png")
 
-	//  VISUALES
- 	game.addVisualCharacter(personaje)
- 	game.addVisual(new Maiz()) // Se agrega a modo de prueba
- 	
- 	//  COMIENZA
+
+	//VISUALES
+	game.addVisualCharacter(personaje)
+	mercado.agregarMercadoEn_Con_Oro(game.at(9, 2), 1000)
+	mercado.agregarMercadoEn_Con_Oro(game.at(3, 8), 500)
+
+
+	//KEYBOARD
+
+	//sembrar
+	keyboard.m().onPressDo({personaje.sembrar(maiz)})
+	keyboard.t().onPressDo({personaje.sembrar(trigo)})
+	keyboard.o().onPressDo({personaje.sembrar(tomaco)})
+
+	//regar
+	keyboard.r().onPressDo({personaje.regar()})
+
+	//cosechar
+	keyboard.c().onPressDo({personaje.cosechar()})
+
+	//vender
+	keyboard.v().onPressDo({personaje.vender()})
+	keyboard.space().onPressDo({personaje.decirCantDeOroYPlantasParaVender()})
+
+
+ 	//JUEGO
 	game.start()
 }
